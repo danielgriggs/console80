@@ -188,11 +188,11 @@ class GenericPanel():
     def _draw_label(self):
         if self.boxLabelSize > 0:
             # Fill the label with background colour
-            # self.panelLabel.fill(self.boxLabelBgColour)            
+            self.panelLabel.fill(self.boxLabelBgColour)
             # render a box with text.
             if not hasattr(self, 'labelFont'):
                 boxHeight = int( math.floor( self.panelLabel.get_height() ))
-                self.labelFont = pygame.font.Font('mono.ttf', boxHeight)
+                self.labelFont = pygame.font.Font('fonts/Impact Label Reversed.ttf', boxHeight)
             Text = self.labelFont.render(self.boxLabelText,
                                          1,
                                          self.boxLabelTextColour,
@@ -203,7 +203,6 @@ class GenericPanel():
             if True:
                 # Convert to display format (faster, also allows scaling)
                 Text = Text.convert()
-                Text.set_colorkey(self.boxLabelBgColour)
                 textRect = Text.get_rect()
                 # Get the Label size
                 panelLabelRect = self.panelLabel.get_rect()
@@ -336,6 +335,7 @@ class GenericIndicator(object):
         
     def renderOverlay(self,Render=None):
         "Set whether the overlay should rendered, returns current status."
+        # print "Setting render overlay to {}".format(Render)
         if Render is not None:
             self.render_overlay = Render
         return self.render_overlay
@@ -607,10 +607,10 @@ class ScatterIndicator(GenericBiIndicator):
         # overlay.fill((0,0,0,0))
 
         # Figure out text size
-        textSize = int( math.ceil( self.boxSize[0] / 20.0 ))
+        textSize = int( math.ceil( self.boxSize[0] / 10.0 ))
         if not hasattr(self, 'overlayFont'):
             # Create a font cache
-            self.overlayFont = pygame.font.Font('DIGIT-LCD.ttf', textSize)
+            self.overlayFont = pygame.font.Font('fonts/destructobeambb_reg.ttf', textSize)
 
         curValue = self.getValue()
         # Put the text in a Var for later.
@@ -851,7 +851,7 @@ class BarIndicator(GenericIndicator):
         textSize = int( math.ceil( self.surface.get_height() / 10.0 ))
         if not hasattr(self, 'overlayFont'):
             # Create a font cache
-            self.overlayFont = pygame.font.Font('DIGIT-LCD.ttf', textSize)
+            self.overlayFont = pygame.font.Font('fonts/destructobeambb_reg.ttf', textSize)
             
         curValue = self.getValue()
         # Put the text in a Var for later.
@@ -1038,7 +1038,7 @@ class DialIndicator(GenericIndicator):
         textSize = int( math.ceil( self.surface.get_height() / 10.0 ))
         if not hasattr(self, 'overlayFont'):
             # Create a font cache
-            self.overlayFont = pygame.font.Font('DIGIT-LCD.ttf', textSize)
+            self.overlayFont = pygame.font.Font('fonts/destructobeambb_reg.ttf', textSize)
             
         curValue = self.getValue()
         # Put the text in a Var for later.
