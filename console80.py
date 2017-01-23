@@ -140,7 +140,7 @@ class GenericPanel():
         # Label Settings
         self.boxLabelSize = label
         self.boxLabelText = "No Label"
-        self.boxLabelColour = (0,0,0)
+        self.boxLabelTextColour = (255,255,255)
         self.boxLabelBorderWidth = 0
         self.boxLabelBorderColour = (255,255,255)
         self.boxLabelBgColour = (50,50,50)
@@ -163,7 +163,6 @@ class GenericPanel():
             logging.debug("Box Size: {}".format(rect))
             logging.debug("Label Size: {}".format(labelRect))
             self.panelLabel = self.screen.subsurface(labelRect)
-            self.panelLabel.fill(self.boxLabelColour)
             if self.boxLabelBorderWidth > 0:
                 pygame.draw.rect(self.panelLabel,
                                  self.boxLabelBorderColour,
@@ -189,27 +188,33 @@ class GenericPanel():
     def _draw_label(self):
         if self.boxLabelSize > 0:
             # Fill the label with background colour
-            self.panelLabel.fill(self.boxLabelBgColour)
+            # self.panelLabel.fill(self.boxLabelBgColour)            
             # render a box with text.
             if not hasattr(self, 'labelFont'):
-                self.labelFont = pygame.font.Font('mono.ttf', 24)
-            Text = self.labelFont.render(self.boxLabelText, 1, (255,255,255), self.boxLabelBgColour)
-            
-            # Convert to display format (faster, also allows scaling)
-            Text = Text.convert()
-            Text.set_colorkey(self.boxLabelBgColour)
-            textRect = Text.get_rect()
-            
-            # Get the Label size
-            panelLabelRect = self.panelLabel.get_rect()
-            
-            # Scale it inside
-            scaledSize = textRect.fit(panelLabelRect)
-            
-            # transform and copy.
-            scaledText = pygame.transform.smoothscale(Text,scaledSize.size)
-            self.panelLabel.blit(scaledText,scaledSize)
-        
+                boxHeight = int( math.floor( self.panelLabel.get_height() ))
+                self.labelFont = pygame.font.Font('mono.ttf', boxHeight)
+            Text = self.labelFont.render(self.boxLabelText,
+                                         1,
+                                         self.boxLabelTextColour,
+                                         self.boxLabelBgColour)
+            # Even though this is called once it effects the
+            # long term running of the code?!
+            # Seems to be about 574 vs 568 speed difference
+            if True:
+                # Convert to display format (faster, also allows scaling)
+                Text = Text.convert()
+                Text.set_colorkey(self.boxLabelBgColour)
+                textRect = Text.get_rect()
+                # Get the Label size
+                panelLabelRect = self.panelLabel.get_rect()
+                # Scale it inside
+                scaledSize = textRect.fit(panelLabelRect)            
+                # transform and copy.
+                scaledText = pygame.transform.smoothscale(Text,scaledSize.size)
+                self.panelLabel.blit(scaledText,scaledSize)
+            else:
+                self.panelLabel.blit(Text,(0,0))
+                
     def setBGColour(self,colour):
         self.boxBgColour = colour
         self._draw_background()
@@ -243,6 +248,54 @@ class GenericPanel():
     def addScatter(self):
         self.dial = ScatterIndicator(self.panel)
         self.dial._render()
+        
+class GenericSingleValue(object):
+    def __init__(self):
+        "Create a place to store and manipulate a value"
+        # Store a reference to the screen.
+        self.value = 0
+        self.valueHistory = []
+        self.maxHistory = 5
+        self.maxValue = 100
+        self.minValue = 0
+        
+    def setValue(self,value):
+        # Record current value to history
+        self.valueHistory.append(self.value)
+        # Record new value
+        self.value = value
+        # Clear history
+        while len(self.valueHistory) > self.maxHistory:
+            self.valueHistory.pop(0)
+        self._render()
+
+    def setRandValue(self):
+        # Get the current value
+        curValue = self.getValue()
+        newValue = curValue + random.randint(-1, 1)
+        # Record new value
+        self.setValue(newValue)
+
+    def getValue(self):
+        "Return the current clipped value"
+        if self.value > self.maxValue:
+            return self.maxValue
+        elif self.value < self.minValue:
+            return self.minValue
+        else:
+            return self.value
+
+    def setRange(self,Range):
+        "Set the accepted input range as a tuple (low,high)"
+        self.maxValue = Range[1]
+        self.minValue = Range[0]
+                        
+    def isClipped(self):
+        "Return whether the current value is clipped"
+        if self.value < self.maxValue:
+            if self.value > self.minValue:
+                return False
+        return True
         
 class GenericIndicator(object):
     def __init__(self,surface):
@@ -561,8 +614,8 @@ class ScatterIndicator(GenericBiIndicator):
 
         curValue = self.getValue()
         # Put the text in a Var for later.
-        xText = "X: {:03}".format(curValue[0])
-        yText = "Y: {:03}".format(curValue[1])
+        xText = "X {:03}".format(curValue[0])
+        yText = "Y {:03}".format(curValue[1])
         lineSize = self.overlayFont.get_linesize()
 
         if not hasattr(self, 'overlayCache'):

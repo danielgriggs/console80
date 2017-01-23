@@ -6,8 +6,8 @@ import random
 
 # Create an instance of the PyScope class
 scope = console80.MainScreen(hw=True)
-Tick = 0
-panels = scope.autoLayoutPanels((2,2),label=0.1)
+Tick = 60
+panels = scope.autoLayoutPanels((5,5),label=0.1)
 scopePanels = []
 for panel in panels:
     # print panel
@@ -38,22 +38,26 @@ for panel in panels:
 clock = scope.createClock()
 
 average = []
-i = 1
-change = 1
+counter = 1
+overlay = True
 while 1:
+    counter += 1
     for panel in scopePanels:
         panel.dial.setRandValue()
-
+        panel.dial.renderOverlay(overlay)
+        
     scope.redrawScreen()
     clock.tick(Tick)
-    if i >= 100 or i < 1:
-        change *= -1
+    if counter % 100 is 0:
         fps = clock.get_fps()
         average.append(fps)
         running = sum(average) / float(len(average))
+    if counter % 1000 is 0:
         print "Current FPS is {:3.2f} running average {:3.2f}".format(fps,running)
-
-    i += change
+        if overlay is True: 
+            overlay = False
+        else:
+            overlay = True
 
 
 exit()
