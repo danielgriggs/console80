@@ -14,6 +14,10 @@ import random
 # Multi value
 # Line chart.
 
+def _calculate_vector(vec):
+    return math.sqrt( vec[0]**2 + vec[1]**2 )
+
+
 class MainScreen:
     screen = None;
 
@@ -249,45 +253,68 @@ class GenericPanel():
         self.dial._render()
 
 class singleIntValue(object):
-    def __init__(self):
+    def __init__(self,Min=0,Value=0,Max=100,maxHistory=5):
         "Create a place to store and manipulate a value"
         # Store a reference to the screen.
-        self.value = None
-        self.valueHistory = []
-        self.maxHistory = 5
-        self.maxValue = 100
-        self.minValue = 0
+        self._value = Value
+        self._valueHistory = []
+        self._maxHistory = maxHistory
+        self._maxValue = Max
+        self._minValue = Min
 
-    def setMaxHistory(self,value=None):
+    def __repr__(self):
+        strm = "Min={}/".format(self._minValue)
+        strm += "Value={}/".format(self._value)
+        strm += "Max={}".format(self._maxValue)
+        strm += ", History {}: {}".format(self._maxHistory,self._valueHistory)
+        return strm
+
+    def setMaxHistoryLength(self,value=None):
         "Set the max value history log"
-        if value is not None and int(value) > 0:
-            self.maxHistory = value
-        return self.maxHistory
+        if value is not None and int(value) > -1:
+            self._maxHistory = value
+        return self._maxHistory
 
     def getHistoryMax(self):
         "Get the max value from the history"
-        return max(self.valueHistory)
+        if self._maxHistory is 0:
+            return None
+        return max(self._valueHistory)
+
+    def getHistoryMin(self):
+        "Get the min value from the history"
+        if self._maxHistory is 0:
+            return None
+        return min(self._valueHistory)
 
     def getHistoryAvg(self):
         "Get the average of all history items"
-        floatAvg = sum( self.valueHistory ) / float(len(self.valueHistory))
-        return int( round( floatAvg ))
+        if self._maxHistory is 0:
+            return None
+        floatAvg = sum( self._valueHistory ) / float(len(self._valueHistory))
+        return floatAvg
 
     def getHistoryLast(self,Num=1):
         "Get the Num previous values"
-        Num = len(self.valueHistory) if Num > len(self.valueHistory)
-        return self.valueHistory[0:Num]
+        if self._maxHistory is 0:
+            return None
+        histLength = len(self._valueHistory)
+        if Num > histLength:
+            Num = histLength
+        start = histLength - Num
+        # print "Get history {} {}".format(start,histLength)
+        return self._valueHistory[start:histLength]
 
     def updateValue(self,value):
         "Update the current value"
         # Record current value to history
-        self.valueHistory.append(self.value)
+        if self._maxHistory is not 0:
+            self._valueHistory.append(self._value)
         # Record new value
-        self.value = value
+        self._value = value
         # Clear history
-        while len(self.valueHistory) > self.maxHistory:
-            self.valueHistory.pop(0)
-        self._render()
+        while len(self._valueHistory) > self._maxHistory:
+            self._valueHistory.pop(0)
 
     def randValue(self):
         # Get the current value
@@ -298,22 +325,25 @@ class singleIntValue(object):
 
     def getValue(self):
         "Return the current clipped value"
-        if self.value > self.maxValue:
-            return self.maxValue
-        elif self.value < self.minValue:
-            return self.minValue
+        if self._value > self._maxValue:
+            return self._maxValue
+        elif self._value < self._minValue:
+            return self._minValue
         else:
-            return self.value
+            return self._value
 
-    def setRange(self,Range):
+    def setRange(self,Range=None):
         "Set the accepted input range as a tuple (low,high)"
-        self.maxValue = Range[1]
-        self.minValue = Range[0]
+        if Range is not None:
+            self._maxValue = Range[1]
+            self._minValue = Range[0]
+
+        return (self._minValue,self._maxValue)
 
     def isClipped(self):
         "Return whether the current value is clipped"
-        if self.value < self.maxValue:
-            if self.value > self.minValue:
+        if self._value < self._maxValue:
+            if self._value > self._minValue:
                 return False
         return True
 
@@ -324,43 +354,71 @@ class singleCoordValue(object):
         self._value = None
         self._valueHistory = []
         self._maxHistory = 5
-        self._maxValue = 100
-        self._minValue = 0
+        self._valueMin = (0,0)
+        self._valueMax = (100,100)
 
-    def setMaxHistory(self,value=None):
-        "Set the max value history log"
-        if value is not None and int(value) > 0:
-            self._maxHistory = value
-        return self._maxHistory
+    def __repr__(self):
+        strm = "Min={}/".format(self._valueMin)
+        strm += "Value={}/".format(self._value)
+        strm += "Max={}".format(self._valueMax)
+        strm += ", History {}: {}".format(self._maxHistory,self._valueHistory)
+        return strm
 
     def _calculate_vector(vec):
         return math.sqrt( vec[0]**2 + vec[1]**2 )
 
+    def setMaxHistoryLength(self,value=None):
+        "Set the max value history log"
+        if value is not None and int(value) > -1:
+            self._maxHistory = value
+        return self._maxHistory
+
     def getHistoryMax(self):
         "Get the max value from the history"
+        if self._maxHistory is 0:
+            return None
         max = (0,0)
         for i in self._valueHistory:
             if _calculate_vector(i) > _calculate_vector(max):
                 max = i
         return max
 
+    def getHistoryMin(self):
+        "Get the min value from the history"
+        if self._maxHistory is 0:
+            return None
+        min = (0,0)
+        for i in self._valueHistory:
+            if _calculate_vector(i) < _calculate_vector(min):
+                min = i
+        return min
+
     def getHistoryAvg(self):
         "Get the average of all history items"
+        if self._maxHistory is 0:
+            return None
         c = [0,0]
         l = len(self._valueHistory)
         for i in self._valueHistory:
-            c[0] + i[0]
-            c[1] + i[1]
-        return = (c[0]/l, c[1]/l)
-
+            c[0] += i[0]
+            c[1] += i[1]
+        return (c[0]/l, c[1]/l)
 
     def getHistoryLast(self,Num=1):
         "Get the Num previous values"
-        Num = len(self._valueHistory) if Num > len(self._valueHistory)
-        return self._valueHistory[0:Num]
+        if self._maxHistory is 0:
+            return None
+        histLength = len(self._valueHistory)
+        if Num > histLength:
+            Num = histLength
+        start = histLength - Num
+        # print "Get history {} {}".format(start,histLength)
+        return self._valueHistory[start:histLength]
 
     def updateValue(self,value):
         "Update the current value"
+        if not isinstance(value, tuple) or len(value) != 2:
+            raise TypeError("This should be co-ordinates")
         # Record current value to history
         self._valueHistory.append(self._value)
         # Record new value
@@ -370,22 +428,25 @@ class singleCoordValue(object):
             self._valueHistory.pop(0)
 
     def randValue(self):
-        # TODO
+        "modify the current value by a random amount"
         # Get the current value
         curValue = self.getValue()
-        newValue = curValue + random.randint(-1, 1)
+        newValueX = curValue[0] + random.randint(-1, 1)
+        newValueY = curValue[1] + random.randint(-1, 1)
         # Record new value
-        self.setValue(newValue)
+        self.setValue((newValueX,newValueY))
 
     def getValue(self):
-        # TODO
-        "Return the current clipped value"
-        if self._value > self._maxValue:
-            return self._maxValue
-        elif self._value < self._minValue:
-            return self._minValue
-        else:
-            return self._value
+        "Return the current value clipped"
+        returnValue = [None, None]
+        for axis in [0, 1]:
+            if self._value[axis] > self._valueMax[axis]:
+                returnValue[axis] = self._valueMax[axis]
+            elif self._value[axis] < self._valueMin[axis]:
+                returnValue[axis] = self._valueMin[axis]
+            else:
+                returnValue[axis] = self._value[axis]
+        return returnValue
 
     def setRange(self,Range):
         # TODO
@@ -396,8 +457,8 @@ class singleCoordValue(object):
     def isClipped(self):
         # TODO
         "Return whether the current value is clipped"
-        if self._value < self._maxValue:
-            if self._value > self._minValue:
+        if self._value < self._valueMax:
+            if self._value > self._valueMin:
                 return False
         return True
 
