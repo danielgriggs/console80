@@ -243,7 +243,7 @@ class GenericPanel():
     def addBar(self,Solid=True,Sideways=False,Flip=False):
         self.dial = BarIndicator(self.panel,Solid,Sideways,Flip)
         self.dial._render()
-        
+
     def addScatter(self):
         self.dial = ScatterIndicator(self.panel)
         self.dial._render()
@@ -727,6 +727,7 @@ class BarIndicator(GenericIndicator):
         self.digitalCount = 5
         self.solid = Solid
         self.sideways = Sideways
+        self.flip = Flip
 
     def _draw_background(self):
         GenericIndicator._draw_background(self)
@@ -805,8 +806,9 @@ class BarIndicator(GenericIndicator):
             barSize = (  barX * 2, self.boxSize[1] - barOff * 2 )
         # Now draw a box
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
-        tPanel = pygame.transform.flip(panel,False,True)
-        self.surface.blit(tPanel,self.boxPosition)
+        if self.flip is True:
+            panel = pygame.transform.flip(panel,True,False)
+        self.surface.blit(panel,self.boxPosition)
 
     def _render_vertical(self):
         panel = self.background.copy()
@@ -830,8 +832,9 @@ class BarIndicator(GenericIndicator):
             barSize = (  self.boxSize[0] - barOff * 2, barY * 2 )
         # Now draw a box
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
-        tPanel = pygame.transform.flip(panel,False,True)
-        self.surface.blit(tPanel,self.boxPosition)
+        if self.flip = False:
+            panel = pygame.transform.flip(panel,False,True)
+        self.surface.blit(panel,self.boxPosition)
 
     def _render_overlay(self):
         if self.render_overlay is False:
