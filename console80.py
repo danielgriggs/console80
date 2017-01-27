@@ -16,7 +16,7 @@ import random
 
 class MainScreen:
     screen = None;
-    
+
     def __init__(self, hw=False):
         "Ininitializes a new pygame screen using the framebuffer"
         # Based on "Python GUI in Linux frame buffer"
@@ -24,7 +24,7 @@ class MainScreen:
         disp_no = os.getenv("DISPLAY")
         if disp_no:
             logging.info("I'm running under X display = {0}".format(disp_no))
-        
+
         # Check which frame buffer drivers are available
         # Start with fbcon since directfb hangs with composite output
         drivers = ['fbcon', 'directfb', 'svgalib']
@@ -42,7 +42,7 @@ class MainScreen:
                 continue
             found = True
             break
-    
+
         if not found:
             raise Exception('No suitable video driver found!')
 
@@ -149,10 +149,10 @@ class GenericPanel():
         self.boxBorderColour = (255,255,255)
         self.boxBgColour = (100,100,100)
         self.boxName = "GenericPanel"
-        
+
         # Generate a subsurface for this panel..
         self.panel = self.screen.subsurface(rect)
-        
+
         # Generate a subsurface for the label.
         if self.boxLabelSize > 0:
             labelRect = pygame.Rect(rect[0],
@@ -207,47 +207,47 @@ class GenericPanel():
                 # Get the Label size
                 panelLabelRect = self.panelLabel.get_rect()
                 # Scale it inside
-                scaledSize = textRect.fit(panelLabelRect)            
+                scaledSize = textRect.fit(panelLabelRect)
                 # transform and copy.
                 scaledText = pygame.transform.smoothscale(Text,scaledSize.size)
                 self.panelLabel.blit(scaledText,scaledSize)
             else:
                 self.panelLabel.blit(Text,(0,0))
-                
+
     def setBGColour(self,colour):
         self.boxBgColour = colour
         self._draw_background()
-        
+
     def setBorderColour(self,colour):
         self.boxBorderColour = colour
         self._draw_background()
-        
+
     def setBorderWidth(self,width):
         self.boxBorderWidth = width
         self._draw_background()
 
     def setLabelText(self,text):
         self.boxLabelText = text
-        self._draw_label()        
+        self._draw_label()
 
     def setName(self,text):
         self.boxName = text
-        
+
     def getName(self):
         return self.boxName
 
     def addDial(self,offsetStyle=False):
         self.dial = DialIndicator(self.panel,offsetStyle)
         self.dial._render()
-        
-    def addBar(self):
-        self.dial = BarIndicator(self.panel)
+
+    def addBar(self,Solid=True,Sideways=False,Flip=False):
+        self.dial = BarIndicator(self.panel,Solid,Sideways,Flip)
         self.dial._render()
         
     def addScatter(self):
         self.dial = ScatterIndicator(self.panel)
         self.dial._render()
-        
+
 class GenericSingleValue(object):
     def __init__(self):
         "Create a place to store and manipulate a value"
@@ -257,7 +257,7 @@ class GenericSingleValue(object):
         self.maxHistory = 5
         self.maxValue = 100
         self.minValue = 0
-        
+
     def setValue(self,value):
         # Record current value to history
         self.valueHistory.append(self.value)
@@ -288,14 +288,14 @@ class GenericSingleValue(object):
         "Set the accepted input range as a tuple (low,high)"
         self.maxValue = Range[1]
         self.minValue = Range[0]
-                        
+
     def isClipped(self):
         "Return whether the current value is clipped"
         if self.value < self.maxValue:
             if self.value > self.minValue:
                 return False
         return True
-        
+
 class GenericIndicator(object):
     def __init__(self,surface):
         "Ininitializes basic panel data"
@@ -332,7 +332,7 @@ class GenericIndicator(object):
     def setPosition(self,position):
         "Accept new position as (x,y)"
         self.boxPosition = position
-        
+
     def renderOverlay(self,Render=None):
         "Set whether the overlay should rendered, returns current status."
         # print "Setting render overlay to {}".format(Render)
@@ -353,7 +353,7 @@ class GenericIndicator(object):
             self.boxBorderColour = Colour
         if BgColour is not False:
             self.boxBgColour = BgColour
-        
+
     def setValue(self,value):
         # Record current value to history
         self.valueHistory.append(self.value)
@@ -384,7 +384,7 @@ class GenericIndicator(object):
         "Set the accepted input range as a tuple (low,high)"
         self.maxValue = Range[1]
         self.minValue = Range[0]
-                        
+
     def isClipped(self):
         "Return whether the current value is clipped"
         if self.value < self.maxValue:
@@ -421,11 +421,11 @@ class GenericBiIndicator(object):
         self.boxSize = size
         # re-initialise background size
         self._draw_background()
-        
+
     def setPosition(self,position):
         "Accept new position as (x,y)"
         self.boxPosition = position
-        
+
     def renderOverlay(self,Render=None):
         "Set whether the overlay should rendered, returns current status."
         if Render is not None:
@@ -437,13 +437,13 @@ class GenericBiIndicator(object):
         # Should be a co-ordinate. (x,y)
         if not isinstance(value, tuple) or len(value) != 2:
             raise TypeError("This should be co-ordinates")
-        
+
         # Record to history
         self.valueHistory.append(self.value)
-        
+
         # Record new value
         self.value = value
-        
+
         # Clean up the history
         while len(self.valueHistory) > self.maxHistory:
             self.valueHistory.pop(0)
@@ -467,7 +467,7 @@ class GenericBiIndicator(object):
                 value[i] = self.minValue[i]
             else:
                 value[i] = self.value[i]
-                
+
         return value
 
     def isClipped(self):
@@ -478,9 +478,6 @@ class GenericBiIndicator(object):
             elif self.value[i] < self.minValue[i]:
                 return True
         return False
-        
-
-
 
 class ScatterIndicator(GenericBiIndicator):
     "Scatter Graph for lack of a better name"
@@ -498,14 +495,14 @@ class ScatterIndicator(GenericBiIndicator):
         self.pointRadius  = 5
         self.pointOutline = 1
         self.boxBorderWidth = 1
-        
+
     def _draw_background(self):
         GenericBiIndicator._draw_background(self)
         # Draw outside box.
         if self.boxBorderWidth > 0:
             pygame.draw.rect(self.background, self.boxBorderColour, ((0,0),self.boxSize), self.boxBorderWidth)
 
-        # Draw the X Axis, at the Y 
+        # Draw the X Axis, at the Y
         maxYRange = self.maxValue[1] - self.minValue[1]
         normZeroOnY = self.axisZero[1] - self.minValue[1]
 
@@ -532,7 +529,7 @@ class ScatterIndicator(GenericBiIndicator):
                          (scaledYZero, 0),
                          (scaledYZero, self.boxSize[1]-1),
                          self.axisWidth)
-        
+
         # Decide how big the circle should be.
         self.pointRadius = int( math.ceil(maxXRange / 20 ))
 
@@ -552,7 +549,7 @@ class ScatterIndicator(GenericBiIndicator):
                                  scaledXZero + lineLength,
                                  i,
                                  self.boxBorderColour)
-            
+
         # Draw little lines along the horizontal axis.
         divisionsDist = int( math.ceil( scaledXZero / 10.0 )) * 2
         for i in xrange(scaledXZero, self.boxSize[0], divisionsDist):
@@ -567,17 +564,17 @@ class ScatterIndicator(GenericBiIndicator):
                                  scaledYZero - lineLength,
                                  scaledYZero + lineLength,
                                  self.boxBorderColour)
-                    
+
     def _render(self):
         if not hasattr(self, 'background'):
             self._draw_background()
         panel = self.background.copy()
         value = self.getValue()
-        
+
         maxYRange = self.maxValue[1] - self.minValue[1]
         normValueOnY = value[1] - self.minValue[1]
         scaledY = int( self.boxSize[1] * ( normValueOnY / float(maxYRange) ) )
-        
+
         # Calculate X value
         maxXRange = self.maxValue[0] - self.minValue[0]
         normValueOnX = value[0] - self.minValue[0]
@@ -588,7 +585,7 @@ class ScatterIndicator(GenericBiIndicator):
         if self.isClipped() is True:
             pointColour = self.pointColourClipped
             pointOutline  = 0
-            
+
         pygame.draw.circle(panel,
                            pointColour, # Colour
                            (scaledX,scaledY), # Circle Centre
@@ -597,11 +594,11 @@ class ScatterIndicator(GenericBiIndicator):
         tPanel = pygame.transform.flip(panel,False,True)
         self.surface.blit(tPanel,self.boxPosition)
         self._render_overlay()
-        
+
     def _render_overlay(self):
         if self.render_overlay is False:
             return
-        
+
         # overlay = pygame.Surface(self.boxSize,flags=pygame.HWSURFACE)
         # overlay = self.background.convert_alpha()
         # overlay.fill((0,0,0,0))
@@ -620,7 +617,7 @@ class ScatterIndicator(GenericBiIndicator):
 
         if not hasattr(self, 'overlayCache'):
             self.overlayCache = dict()
-            
+
         # Render the text, if it's not cached
         if xText in self.overlayCache:
             xLabel = self.overlayCache[xText]
@@ -639,13 +636,10 @@ class ScatterIndicator(GenericBiIndicator):
         # overlay.blit(xLabel,(textSize,textSize))
         # overlay.blit(yLabel,(textSize,textSize + lineSize ))
         # self.surface.blit(overlay,self.boxPosition)
-        
+
         # Try direct blit with no overlay.
         self.surface.blit(xLabel,(textSize,textSize))
         self.surface.blit(yLabel,(textSize,textSize + lineSize ))
-            
-
-        
 
 class DigitalIndicator(GenericIndicator):
     "Digital numerical data"
@@ -664,10 +658,10 @@ class DigitalIndicator(GenericIndicator):
                          ((0,0),self.boxSize),
                          self.boxBorderWidth)
         self.barPadding = int( math.ceil ( self.boxSize[0] / 20 ))
-        
+
         # Draw scale marks.
         if self.sideways is True:
-            divisionWidth = int( math.ceil(self.boxSize[0] / 10.0 ))        
+            divisionWidth = int( math.ceil(self.boxSize[0] / 10.0 ))
             for i in xrange(0,self.boxSize[0],divisionWidth):
                 # Bottom lines
                 pygame.gfxdraw.vline(self.background,
@@ -681,9 +675,9 @@ class DigitalIndicator(GenericIndicator):
                                      self.boxSize[1],
                                      self.boxSize[1] - int( math.floor(self.boxSize[1] / 20.0 )),
                                      self.boxBorderColour)
-        
+
         if self.sideways is False:
-            divisionWidth = int( math.ceil(self.boxSize[1] / 10.0 ))        
+            divisionWidth = int( math.ceil(self.boxSize[1] / 10.0 ))
             for i in xrange(0,self.boxSize[1],divisionWidth):
                 # Right hand side line
                 pygame.gfxdraw.hline(self.background,
@@ -697,15 +691,15 @@ class DigitalIndicator(GenericIndicator):
                                      self.boxSize[0] - int( math.floor(self.boxSize[0] / 20.0 )),
                                      i,
                                      self.boxBorderColour)
-        
+
     def _render(self):
         panel = self.background.copy()
-        
+
         # Figure out bar size and off set
         barOff = self.barPadding
         maxBarSize = ( self.boxSize[0] - barOff * 2, self.boxSize[1] - ( barOff + self.boxBorderWidth ) )
         # Scale value to final size.
-        barHeight = int ( maxBarSize[1] * ( self.getValue() / float(100) ) )       
+        barHeight = int ( maxBarSize[1] * ( self.getValue() / float(100) ) )
         logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barHeight))
         barColour = self.barColour
         if self.isClipped() is True:
@@ -725,7 +719,7 @@ class DigitalIndicator(GenericIndicator):
 
 class BarIndicator(GenericIndicator):
     "Bar numerical data"
-    def __init__(self,screen, Solid=True, Sideways=False):
+    def __init__(self,screen, Solid=True, Sideways=False, Flip=False):
         "Ininitializes a new BarGraph"
         GenericIndicator.__init__(self,screen)
         self.barColour = (0,255,0)
@@ -733,7 +727,7 @@ class BarIndicator(GenericIndicator):
         self.digitalCount = 5
         self.solid = Solid
         self.sideways = Sideways
-        
+
     def _draw_background(self):
         GenericIndicator._draw_background(self)
         # Draw outside box.
@@ -742,10 +736,10 @@ class BarIndicator(GenericIndicator):
                          ((0,0),self.boxSize),
                          self.boxBorderWidth)
         self.barPadding = int( math.ceil ( self.boxSize[0] / 20 ))
-        
+
         # Draw scale marks.
         if self.sideways is True:
-            divisionWidth = int( math.ceil(self.boxSize[0] / 10.0 ))        
+            divisionWidth = int( math.ceil(self.boxSize[0] / 10.0 ))
             for i in xrange(0,self.boxSize[0],divisionWidth):
                 # Bottom lines
                 pygame.gfxdraw.vline(self.background,
@@ -759,9 +753,9 @@ class BarIndicator(GenericIndicator):
                                      self.boxSize[1],
                                      self.boxSize[1] - int( math.floor(self.boxSize[1] / 20.0 )),
                                      self.boxBorderColour)
-        
+
         if self.sideways is False:
-            divisionWidth = int( math.ceil(self.boxSize[1] / 10.0 ))        
+            divisionWidth = int( math.ceil(self.boxSize[1] / 10.0 ))
             for i in xrange(0,self.boxSize[1],divisionWidth):
                 # Right hand side line
                 pygame.gfxdraw.hline(self.background,
@@ -775,7 +769,7 @@ class BarIndicator(GenericIndicator):
                                      self.boxSize[0] - int( math.floor(self.boxSize[0] / 20.0 )),
                                      i,
                                      self.boxBorderColour)
-        
+
     def _render(self):
         if not hasattr(self, 'background'):
             self._draw_background()
@@ -785,25 +779,25 @@ class BarIndicator(GenericIndicator):
             self._render_horizontal()
         self._render_overlay()
 
-        
+
     def _render_horizontal(self):
         panel = self.background.copy()
         # Figure out bar size and off set
         barOff = self.barPadding
-        
+
         maxBarSize = ( self.boxSize[0] - ( barOff + self.boxBorderWidth ), self.boxSize[1] - barOff * 2 )
         # Scale value to final size.
-        barWidth = int ( maxBarSize[0] * ( self.getValue() / float(100) ) )       
+        barWidth = int ( maxBarSize[0] * ( self.getValue() / float(100) ) )
         logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barWidth))
         # Check for clipping
         barColour = self.barColour
         if self.isClipped() is True:
             barColour = self.barColourClipped
 
-        # Calculate bar details 
+        # Calculate bar details
         barPosition = ( self.boxBorderWidth, barOff )
         barSize = ( barWidth, self.boxSize[1] - barOff * 2 )
-        
+
         if self.solid is False:
             # Size each size of the point.
             barX = int( math.ceil( maxBarSize[0] / 60 ) )
@@ -816,12 +810,12 @@ class BarIndicator(GenericIndicator):
 
     def _render_vertical(self):
         panel = self.background.copy()
-        
+
         # Figure out bar size and off set
         barOff = self.barPadding
         maxBarSize = ( self.boxSize[0] - barOff * 2, self.boxSize[1] - ( barOff + self.boxBorderWidth ) )
         # Scale value to final size.
-        barHeight = int ( maxBarSize[1] * ( self.getValue() / float(100) ) )       
+        barHeight = int ( maxBarSize[1] * ( self.getValue() / float(100) ) )
         logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barHeight))
         barColour = self.barColour
         if self.isClipped() is True:
@@ -838,43 +832,43 @@ class BarIndicator(GenericIndicator):
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
         tPanel = pygame.transform.flip(panel,False,True)
         self.surface.blit(tPanel,self.boxPosition)
-        
+
     def _render_overlay(self):
         if self.render_overlay is False:
             return
-        
+
         # overlay = pygame.Surface(self.boxSize,flags=pygame.HWSURFACE)
         # overlay = self.background.convert_alpha()
         # overlay.fill((0,0,0,0))
-        
+
         # Figure out text size
         textSize = int( math.ceil( self.surface.get_height() / 10.0 ))
         if not hasattr(self, 'overlayFont'):
             # Create a font cache
             self.overlayFont = pygame.font.Font('fonts/destructobeambb_reg.ttf', textSize)
-            
+
         curValue = self.getValue()
         # Put the text in a Var for later.
         Text = "{:03}".format(curValue)
-        
+
         lineSize = self.overlayFont.get_linesize()
-            
+
         if not hasattr(self, 'overlayCache'):
             self.overlayCache = dict()
-                
+
         # Render the text, if it's not cached
         if Text in self.overlayCache:
             Label = self.overlayCache[Text]
         else:
             Label = self.overlayFont.render(Text, 1, (255,255,255))
             self.overlayCache[Text] = Label
-                    
+
         # Blit to overlay
         posMe = ( ( self.boxSize[1] / 2.0 ) - ( Label.get_width() / 2.0 ),
                   self.surface.get_height() - textSize * 2 )
-        
+
         self.surface.blit(Label,posMe)
-                        
+
 
 class DialIndicator(GenericIndicator):
     "Dial Graph is a thing apparently"
@@ -892,7 +886,7 @@ class DialIndicator(GenericIndicator):
         if offsetStyle is True:
             self.dialStart = -30
             self.dialSweep = 60
-        
+
     def _draw_background(self):
         GenericIndicator._draw_background(self)
         # Try and make a transparent background.
@@ -903,7 +897,7 @@ class DialIndicator(GenericIndicator):
             minWidth = self.boxSize[1]
         self.radius = int( math.floor( float( minWidth ) / 2 ) ) - 4
         self.circleCentre = (self.radius+3, self.radius+3)
-        
+
         if self.offsetStyle is True:
             self.dialCentre = (self.radius+2, int( (self.radius+2) * 0.2))
             self.dialLength = int( float(self.radius) * 1.4 )
@@ -913,7 +907,7 @@ class DialIndicator(GenericIndicator):
 
         # print("Setup Centre {}, Radius {}".format(self.circleCentre,self.radius))
         # print("Setup dialCentre {}, dialLength {}".format(self.dialCentre,self.dialLength))
-        
+
         # Draw the background of the Dial
         pygame.gfxdraw.filled_circle(self.background,
                                      self.circleCentre[0],
@@ -928,14 +922,14 @@ class DialIndicator(GenericIndicator):
                                     self.circleCentre[1],
                                     self.radius-i,
                                     self.boxBorderColour)
-            
+
         dialZeroAngleRad  = math.radians(self.dialStart)
         dialMaxAngleRad  = math.radians(self.dialStart + self.dialSweep)
         # Draw an arc for the travel
         # print("Arc Dial Centre {}, Len {}".format(self.dialCentre,self.dialLength))
         # Figure out thickness for dial travel border
         thickness = int(self.radius * 0.05)
-        # print("Radius {} -> Thickness {}".format(self.radius,thickness))        
+        # print("Radius {} -> Thickness {}".format(self.radius,thickness))
         for i in xrange(thickness):
             pygame.gfxdraw.arc(self.background,
                                self.dialCentre[0],
@@ -960,7 +954,7 @@ class DialIndicator(GenericIndicator):
                          dialZeroEndp1,
                          dialZeroEndp2,
                          thickness)
-        
+
         # Draw Max.
         maxDeltaXp2 = int( self.dialLength * 1.1 * math.sin(dialMaxAngleRad) )
         maxDeltaYp2 = int( self.dialLength * 1.1 * math.cos(dialMaxAngleRad) )
@@ -977,7 +971,7 @@ class DialIndicator(GenericIndicator):
                          dialMaxEndp1,
                          thickness)
 
-        
+
         divisionWidth = (dialMaxAngleRad - dialZeroAngleRad) /10.0
         fSeq = self._get_float_range(dialZeroAngleRad,dialMaxAngleRad,divisionWidth)
         # print "Start {}, End {}, Steps {:f}".format(dialZeroAngleRad,dialMaxAngleRad,divisionWidth)
@@ -996,7 +990,7 @@ class DialIndicator(GenericIndicator):
                              dialPicEndp2,
                              dialPicEndp1,
                              thickness)
-        
+
 
     def _render(self):
         if not hasattr(self, 'background'):
@@ -1022,50 +1016,44 @@ class DialIndicator(GenericIndicator):
         if self.sideways is True and self.offsetStyle is True:
             tPanel = pygame.transform.rotate(tPanel,90)
         if self.flip is True and self.offsetStyle is True:
-            tPanel = pygame.transform.flip(tPanel,True,False)            
+            tPanel = pygame.transform.flip(tPanel,True,False)
         self.surface.blit(tPanel,self.boxPosition)
-        self._render_overlay()        
-        
+        self._render_overlay()
+
     def _render_overlay(self):
         if self.render_overlay is False:
             return
-        
+
         # overlay = pygame.Surface(self.boxSize,flags=pygame.HWSURFACE)
         # overlay = self.background.convert_alpha()
         # overlay.fill((0,0,0,0))
-        
+
         # Figure out text size
         textSize = int( math.ceil( self.surface.get_height() / 10.0 ))
         if not hasattr(self, 'overlayFont'):
             # Create a font cache
             self.overlayFont = pygame.font.Font('fonts/destructobeambb_reg.ttf', textSize)
-            
+
         curValue = self.getValue()
         # Put the text in a Var for later.
         Text = "{:03}".format(curValue)
-        
+
         lineSize = self.overlayFont.get_linesize()
-            
+
         if not hasattr(self, 'overlayCache'):
             self.overlayCache = dict()
-                
+
         # Render the text, if it's not cached
         if Text in self.overlayCache:
             Label = self.overlayCache[Text]
         else:
             Label = self.overlayFont.render(Text, 1, (255,255,255))
             self.overlayCache[Text] = Label
-                    
+
         # Blit to overlay
         posMe = ( ( self.boxSize[1] / 2.0 ) - ( Label.get_width() / 2.0 ),
                   self.surface.get_height() - textSize * 2 )
-        
+
         # overlay.blit(Label,posMe)
-        
+
         self.surface.blit(Label,posMe)
-
-
-
-
-
-        

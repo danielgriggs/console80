@@ -645,9 +645,6 @@ class GenericBiIndicator(object):
                 return True
         return False
 
-
-
-
 class ScatterIndicator(GenericBiIndicator):
     "Scatter Graph for lack of a better name"
     def __init__(self,screen):
@@ -810,9 +807,6 @@ class ScatterIndicator(GenericBiIndicator):
         self.surface.blit(xLabel,(textSize,textSize))
         self.surface.blit(yLabel,(textSize,textSize + lineSize ))
 
-
-
-
 class DigitalIndicator(GenericIndicator):
     "Digital numerical data"
     def __init__(self,screen, Solid=True, Sideways=True):
@@ -891,12 +885,12 @@ class DigitalIndicator(GenericIndicator):
 
 class BarIndicator(GenericIndicator):
     "Bar numerical data"
-    def __init__(self,screen, Solid=True, Sideways=False):
+    def __init__(self,screen, Solid=True, Sideways=False, Flip=False):
         "Ininitializes a new BarGraph"
         GenericIndicator.__init__(self,screen)
         self.barColour = (0,255,0)
         self.barColourClipped = (255, 0, 0)
-        self.digitalCount = 5
+        # self.digitalCount = 5
         self.solid = Solid
         self.sideways = Sideways
 
@@ -957,7 +951,8 @@ class BarIndicator(GenericIndicator):
         # Figure out bar size and off set
         barOff = self.barPadding
 
-        maxBarSize = ( self.boxSize[0] - ( barOff + self.boxBorderWidth ), self.boxSize[1] - barOff * 2 )
+        maxBarSize = ( self.boxSize[0] - ( barOff + self.boxBorderWidth ),
+                        self.boxSize[1] - barOff * 2 )
         # Scale value to final size.
         barWidth = int ( maxBarSize[0] * ( self.getValue() / float(100) ) )
         logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barWidth))
