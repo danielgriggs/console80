@@ -832,7 +832,7 @@ class BarIndicator(GenericIndicator):
             barSize = (  self.boxSize[0] - barOff * 2, barY * 2 )
         # Now draw a box
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
-        if self.flip = False:
+        if self.flip is False:
             panel = pygame.transform.flip(panel,False,True)
         self.surface.blit(panel,self.boxPosition)
 
