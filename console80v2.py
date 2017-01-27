@@ -1,6 +1,6 @@
 import os
-import pygame
-import pygame.gfxdraw
+#import pygame
+#import pygame.gfxdraw
 import math
 import logging
 import random
@@ -265,7 +265,8 @@ class singleIntValue(object):
     def __repr__(self):
         strm = "Min={}/".format(self._minValue)
         strm += "Value={}/".format(self._value)
-        strm += "Max={}".format(self._maxValue)
+        strm += "Max={}/".format(self._maxValue)
+        strm += "ScaledVaule={}".format(self.getScaledValue())
         strm += ", History {}: {}".format(self._maxHistory,self._valueHistory)
         return strm
 
@@ -331,6 +332,23 @@ class singleIntValue(object):
             return self._minValue
         else:
             return self._value
+
+    def getScaledValue(self,Max=1000):
+        "Return the current clipped value between 0 and Max"
+        # Clip the Value
+        clippedValue = self._value
+        if self._value > self._maxValue:
+            clippedValue = self._maxValue
+        elif self._value < self._minValue:
+            clippedValue = self._minValue
+        # normalise
+        normalClippedValue = float( clippedValue - self._minValue )
+        normalMax = float( self._maxValue - self._minValue )
+        # Bypass divide by 0 issues
+        if int(normalClippedValue) is 0:
+            return 0
+        # Scale the value to a value
+        return int(( normalClippedValue / normalMax ) * Max)
 
     def setRange(self,Range=None):
         "Set the accepted input range as a tuple (low,high)"
