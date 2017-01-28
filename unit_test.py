@@ -44,10 +44,20 @@ print "Get the value back {}".format(singleton.getValue())
 print "Get a scaled value back {}".format(singleton.getScaledValue())
 print "Am I clipping {}".format(singleton.isClipped())
 print ""
-singleton.updateValue(20)
+singleton.updateValue(5)
 print singleton
 print "Get the value back {}".format(singleton.getValue())
 print "Am I clipping {}".format(singleton.isClipped())
+print ""
+print "Set the range 1 - 10"
+singleton.setRange((0,10))
+print singleton
+print ""
+print "Sweep to 10 and back"
+for i in range(22):
+    singleton.sweepValue()
+    print singleton
+print ""
 print ""
 coord = console80v2.singleCoordValue()
 print "=== Co-Ordinates Time ==="
@@ -91,9 +101,18 @@ coord.updateValue((-1,-1))
 print "Get the value back {}".format(coord.getValue())
 print "Am I clipping {}".format(coord.isClipped())
 print ""
-coord.updateValue((10,10))
+coord.updateValue((0,0))
 print "Get the value back {}".format(coord.getValue())
 print "Am I clipping {}".format(coord.isClipped())
+print ""
+print "Set the range -5,-5 - 5,5"
+coord.setRange(((-5 , -5) , (5 , 5)))
+print coord
+print ""
+print "Sweep to 5 and back to -5"
+for i in range(22):
+    coord.sweepValue()
+    print coord
 print ""
 
 

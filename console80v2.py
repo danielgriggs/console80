@@ -257,6 +257,7 @@ class singleIntValue(object):
         "Create a place to store and manipulate a value"
         # Store a reference to the screen.
         self._value = Value
+        self._valueSweep = 1
         self._valueHistory = []
         self._maxHistory = maxHistory
         self._maxValue = Max
@@ -324,6 +325,16 @@ class singleIntValue(object):
         # Record new value
         self.setValue(newValue)
 
+    def sweepValue(self):
+        # Get the current value
+        curValue = self._value
+        newValue = curValue + self._valueSweep
+        # Record new value
+        self.updateValue(newValue)
+        # If we are clipping then reverse
+        if self.isClipped() is True:
+            self._valueSweep *= -1
+
     def getValue(self):
         "Return the current clipped value"
         if self._value > self._maxValue:
@@ -360,8 +371,8 @@ class singleIntValue(object):
 
     def isClipped(self):
         "Return whether the current value is clipped"
-        if self._value < self._maxValue:
-            if self._value > self._minValue:
+        if self._value <= self._maxValue:
+            if self._value >= self._minValue:
                 return False
         return True
 
@@ -370,6 +381,7 @@ class singleCoordValue(object):
         "Create a place to store and manipulate co-ordinate value"
         # Store a reference to the screen.
         self._value = None
+        self._valueSweep = 1
         self._valueHistory = []
         self._maxHistory = 5
         self._valueMin = (0,0)
@@ -381,9 +393,6 @@ class singleCoordValue(object):
         strm += "Max={}".format(self._valueMax)
         strm += ", History {}: {}".format(self._maxHistory,self._valueHistory)
         return strm
-
-    def _calculate_vector(vec):
-        return math.sqrt( vec[0]**2 + vec[1]**2 )
 
     def setMaxHistoryLength(self,value=None):
         "Set the max value history log"
@@ -454,6 +463,18 @@ class singleCoordValue(object):
         # Record new value
         self.setValue((newValueX,newValueY))
 
+    def sweepValue(self):
+        "modify the current value by a random amount"
+        # Get the current value
+        curValue = self._value
+        newValueX = curValue[0] + self._valueSweep
+        newValueY = curValue[1] + self._valueSweep
+        # Record new value
+        self.updateValue((newValueX,newValueY))
+        # If clipped sweep back
+        if self.isClipped() is True:
+            self._valueSweep *= -1
+
     def getValue(self):
         "Return the current value clipped"
         returnValue = [None, None]
@@ -467,16 +488,15 @@ class singleCoordValue(object):
         return returnValue
 
     def setRange(self,Range):
-        # TODO
         "Set the accepted input range as a tuple (low,high)"
-        self._maxValue = Range[1]
-        self._minValue = Range[0]
+        self._valueMax = Range[1]
+        self._valueMin = Range[0]
 
     def isClipped(self):
         # TODO
         "Return whether the current value is clipped"
-        if self._value < self._valueMax:
-            if self._value > self._valueMin:
+        if self._value <= self._valueMax:
+            if self._value >= self._valueMin:
                 return False
         return True
 
