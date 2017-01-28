@@ -7,7 +7,7 @@ import random
 # Create an instance of the PyScope class
 scope = console80.MainScreen(hw=True)
 Tick = 60
-panels = scope.autoLayoutPanels((5,5),label=0.1)
+panels = scope.autoLayoutPanels((10,10),label=0.1)
 scopePanels = []
 for panel in panels:
     # print panel
@@ -28,7 +28,10 @@ for panel in panels:
             gPanel.dial.setValue((random.randint(0, 100),random.randint(0, 100)))
             gPanel.setName("Scatter Graph {}".format(panel['rpos']) )
         else:
-            gPanel.addBar()
+            solid=True
+            if panel['rpos'][1] % 4 > 0:
+                solid=False
+            gPanel.addBar(Solid=solid,Sideways=False,Flip=False)
             gPanel.dial.setValue(random.randint(0, 100))
             gPanel.setName("Bar Graph {}".format(panel['rpos']) )
         
@@ -53,7 +56,7 @@ while 1:
         average.append(fps)
         running = sum(average) / float(len(average))
     if counter % 1000 is 0:
-        print "Current FPS is {:3.2f} running average {:3.2f}".format(fps,running)
+        print 'Current FPS is {:3.2f} running average {:3.2f}'.format(fps,running)
         if overlay is True: 
             overlay = False
         else:

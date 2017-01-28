@@ -724,7 +724,7 @@ class BarIndicator(GenericIndicator):
         GenericIndicator.__init__(self,screen)
         self.barColour = (0,255,0)
         self.barColourClipped = (255, 0, 0)
-        self.digitalCount = 5
+        # self.digitalCount = 5
         self.solid = Solid
         self.sideways = Sideways
         self.flip = Flip
@@ -736,7 +736,11 @@ class BarIndicator(GenericIndicator):
                          self.boxBorderColour,
                          ((0,0),self.boxSize),
                          self.boxBorderWidth)
-        self.barPadding = int( math.ceil ( self.boxSize[0] / 20 ))
+        Padding = int( math.ceil ( self.boxSize[0] / 20 )) + self.boxBorderWidth
+        if self.sideways is True:
+            self.barXYPadding = ( self.boxBorderWidth, Padding )
+        else:
+            self.barXYPadding = ( Padding, self.boxBorderWidth )
 
         # Draw scale marks.
         if self.sideways is True:
@@ -783,55 +787,96 @@ class BarIndicator(GenericIndicator):
 
     def _render_horizontal(self):
         panel = self.background.copy()
+        panelSize = panel.get_size()
         # Figure out bar size and off set
-        barOff = self.barPadding
+        barMin = self.barXYPadding
+        maxBarSize = ( panelSize[0] - barMin[0] * 2,
+                       panelSize[1] - barMin[1] * 2 )
 
-        maxBarSize = ( self.boxSize[0] - ( barOff + self.boxBorderWidth ), self.boxSize[1] - barOff * 2 )
-        # Scale value to final size.
-        barWidth = int ( maxBarSize[0] * ( self.getValue() / float(100) ) )
-        logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barWidth))
+        if self.solid is True:
+            # Scale value to final size.
+            barWidth = int( maxBarSize[0] * ( self.getValue() / float(100) ) )
+            logging.debug("Bar Total Value {:03}, Scaled {}".format(self.getValue(),barWidth))
+        
+            # Calculate bar details Top and Left
+            barPosition = barMin
+            barSize = (barWidth, maxBarSize[1])
+        else:
+            # Line width divided by two
+            barX = int( math.ceil( maxBarSize[0] / 60 ) )
+            
+            # Recalculate
+            barMin = (self.barXYPadding[0] - barX,
+                      self.barXYPadding[1] )
+            maxBarSize = ( self.boxSize[0] - barMin[0] * 2,
+                           self.boxSize[1] - barMin[1] * 2 )
+
+            # Calculate middle of bar.
+            barWidth = int( maxBarSize[0] * ( self.getValue() / float(100) ) )
+
+            # To be fair I don't understand why I only add the padding
+            # it should be BarMin[1]
+            barPosition = ( barWidth + self.barXYPadding[0], barMin[1] )
+            barSize = (barX * 2 , maxBarSize[1])
+
         # Check for clipping
         barColour = self.barColour
         if self.isClipped() is True:
             barColour = self.barColourClipped
 
-        # Calculate bar details
-        barPosition = ( self.boxBorderWidth, barOff )
-        barSize = ( barWidth, self.boxSize[1] - barOff * 2 )
-
-        if self.solid is False:
-            # Size each size of the point.
-            barX = int( math.ceil( maxBarSize[0] / 60 ) )
-            barPosition = ( barWidth - barX, barOff )
-            barSize = (  barX * 2, self.boxSize[1] - barOff * 2 )
-        # Now draw a box
+        # Draw a box
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
+
         if self.flip is True:
             panel = pygame.transform.flip(panel,True,False)
         self.surface.blit(panel,self.boxPosition)
 
     def _render_vertical(self):
         panel = self.background.copy()
-
+        panelSize = panel.get_size()
         # Figure out bar size and off set
-        barOff = self.barPadding
-        maxBarSize = ( self.boxSize[0] - barOff * 2, self.boxSize[1] - ( barOff + self.boxBorderWidth ) )
-        # Scale value to final size.
-        barHeight = int ( maxBarSize[1] * ( self.getValue() / float(100) ) )
-        logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barHeight))
+        barMin = self.barXYPadding
+        maxBarSize = ( panelSize[0] - barMin[0] * 2,
+                       panelSize[1] - barMin[1] * 2 )
+
+        if self.solid is True:
+            # Scale value to final size.
+            barHeight = int( maxBarSize[1] * ( self.getValue() / float(100) ) )
+            logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barHeight))
+        
+            # Calculate bar details Top and Left
+            barPosition = barMin
+            barSize = (maxBarSize[0] , barHeight)
+        else:
+            # Line width divided by two
+            barY = int( math.ceil( maxBarSize[1] / 60 ) )
+            
+            # Recalculate
+            barMin = (self.barXYPadding[0],
+                      self.barXYPadding[1] + barY )
+            maxBarSize = ( self.boxSize[0] - barMin[0] * 2,
+                           self.boxSize[1] - barMin[1] * 2 )
+
+            # Calculate middle of bar.
+            barHeight = int( maxBarSize[1] * ( self.getValue() / float(100) ) )
+
+            # To be fair I don't understand why I only add the padding
+            # it should be BarMin[1]
+            barPosition = ( barMin[0], barHeight + self.barXYPadding[1] )
+            barSize = (  maxBarSize[0], barY * 2 )
+
+        # Check for clipping
         barColour = self.barColour
         if self.isClipped() is True:
             barColour = self.barColourClipped
-        # Calculate bar details Top and Left
-        barPosition = ( barOff, self.boxBorderWidth )
-        barSize = ( self.boxSize[0] - barOff * 2, barHeight )
-        if self.solid is False:
-            # Size each size of the point.
-            barY = int( math.ceil( maxBarSize[1] / 60 ) )
-            barPosition = ( barOff, barHeight - barY )
-            barSize = (  self.boxSize[0] - barOff * 2, barY * 2 )
+
         # Now draw a box
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
+        # print "Graph  {2} Bottom/Left {0[0]}/{0[1]} Size {1[0]}/{1[1]}".format(barPosition,barSize,self.getValue())
+        # Draw the border
+        # pygame.draw.rect(panel, (0,255,255), (barMin , maxBarSize), 1)
+        # print "Border {2} Bottom/Left {0[0]}/{0[1]} Size {1[0]}/{1[1]}".format(barMin,maxBarSize,self.getValue())
+        
         if self.flip is False:
             panel = pygame.transform.flip(panel,False,True)
         self.surface.blit(panel,self.boxPosition)
