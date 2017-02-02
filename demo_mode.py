@@ -56,7 +56,7 @@ while 1:
         average.append(fps)
         running = sum(average) / float(len(average))
     if counter % 1000 is 0:
-        print 'Current FPS is {:3.2f} running average {:3.2f}'.format(fps,running)
+        print('Current FPS is {:3.2f} running average {:3.2f}'.format(fps,running))
         if overlay is True: 
             overlay = False
         else:
