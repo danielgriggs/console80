@@ -17,6 +17,12 @@ import random
 def _calculate_vector(vec):
     return math.sqrt( vec[0]**2 + vec[1]**2 )
 
+def _get_float_range(start,stop,step):
+    r = start
+    while r < stop:
+        yield r
+        r += step
+
 
 class MainScreen:
     screen = None;
@@ -135,7 +141,7 @@ class MainScreen:
                 panelPositions.append({ "rect" : (xPos, yPos, maxSize, maxSize), "rpos" : (x, y)})
         return panelPositions
 
-class GenericPanel():
+class GenericPanel(object):
     def __init__(self,screen,rect,label=0):
         "Ininitializes basic panel data"
         # Store a reference to the screen.
@@ -252,7 +258,7 @@ class GenericPanel():
         self.dial = ScatterIndicator(self.panel)
         self.dial._render()
 
-class singleIntValue(object):
+class SingleIntValue(object):
     def __init__(self,Min=0,Value=0,Max=100,maxHistory=5):
         "Create a place to store and manipulate a value"
         # Store a reference to the screen.
@@ -376,7 +382,7 @@ class singleIntValue(object):
                 return False
         return True
 
-class singleCoordValue(object):
+class SingleCoordValue(object):
     def __init__(self):
         "Create a place to store and manipulate co-ordinate value"
         # Store a reference to the screen.
@@ -511,14 +517,6 @@ class GenericIndicator(object):
         self.boxBorderWidth = 2
         self.boxBorderColour = (255,255,255)
         self.boxBgColour = (0,0,0)
-        # Store generic values.
-        self.value = 0
-        self.valueHistory = []
-        self.maxHistory = 5
-        self.maxValue = 100
-        self.minValue = 0
-        # Initialise bits and bobs.
-        # self._draw_background()
         self.render_overlay = False
 
     def _draw_background(self):
@@ -527,28 +525,12 @@ class GenericIndicator(object):
         self.background = self.background.convert_alpha()
         # print("{:#x}".format(self.background.get_flags()))
 
-    def _get_float_range(self,start,stop,step):
-        r = start
-        while r < stop:
-            yield r
-            r += step
-
-    def setPosition(self,position):
-        "Accept new position as (x,y)"
-        self.boxPosition = position
-
     def renderOverlay(self,Render=None):
         "Set whether the overlay should rendered, returns current status."
         # print("Setting render overlay to {}".format(Render))
         if Render is not None:
             self.render_overlay = Render
         return self.render_overlay
-
-    def setSize(self,size):
-        "Accept new size as (x,y)"
-        self.boxSize = size
-        # re-initialise background size
-        self._draw_background()
 
     def boxBorderDetails(self,Width=False,Colour=False,BgColour=False):
         if Width is not False:
@@ -557,44 +539,6 @@ class GenericIndicator(object):
             self.boxBorderColour = Colour
         if BgColour is not False:
             self.boxBgColour = BgColour
-
-    def setValue(self,value):
-        # Record current value to history
-        self.valueHistory.append(self.value)
-        # Record new value
-        self.value = value
-        # Clear history
-        while len(self.valueHistory) > self.maxHistory:
-            self.valueHistory.pop(0)
-        self._render()
-
-    def setRandValue(self):
-        # Get the current value
-        curValue = self.getValue()
-        newValue = curValue + random.randint(-1, 1)
-        # Record new value
-        self.setValue(newValue)
-
-    def getValue(self):
-        "Return the current clipped value"
-        if self.value > self.maxValue:
-            return self.maxValue
-        elif self.value < self.minValue:
-            return self.minValue
-        else:
-            return self.value
-
-    def setRange(self,Range):
-        "Set the accepted input range as a tuple (low,high)"
-        self.maxValue = Range[1]
-        self.minValue = Range[0]
-
-    def isClipped(self):
-        "Return whether the current value is clipped"
-        if self.value < self.maxValue:
-            if self.value > self.minValue:
-                return False
-        return True
 
 class GenericBiIndicator(object):
     def __init__(self,surface):
@@ -620,68 +564,20 @@ class GenericBiIndicator(object):
         self.background = pygame.Surface(self.boxSize,flags=pygame.HWSURFACE)
         self.background = self.background.convert_alpha()
 
-    def setSize(self,size):
-        "Accept new size as (x,y)"
-        self.boxSize = size
-        # re-initialise background size
-        self._draw_background()
-
-    def setPosition(self,position):
-        "Accept new position as (x,y)"
-        self.boxPosition = position
-
     def renderOverlay(self,Render=None):
         "Set whether the overlay should rendered, returns current status."
         if Render is not None:
             self.render_overlay = Render
         return self.render_overlay
 
-    def setValue(self,value):
-        "This must be a (x,y) Tuple"
-        # Should be a co-ordinate. (x,y)
-        if not isinstance(value, tuple) or len(value) != 2:
-            raise TypeError("This should be co-ordinates")
+    def boxBorderDetails(self,Width=None,Colour=None,BgColour=None):
+        if Width is not None:
+            self.boxBorderWidth = int(Width)
+        if Colour is not None:
+            self.boxBorderColour = Colour
+        if BgColour is not None:
+            self.boxBgColour = BgColour
 
-        # Record to history
-        self.valueHistory.append(self.value)
-
-        # Record new value
-        self.value = value
-
-        # Clean up the history
-        while len(self.valueHistory) > self.maxHistory:
-            self.valueHistory.pop(0)
-        self._render()
-
-    def setRandValue(self):
-        # Get the current value
-        curValue = self.getValue()
-        newValueX = curValue[0] + random.randint(-1, 1)
-        newValueY = curValue[1] + random.randint(-1, 1)
-        # Record new value
-        self.setValue((newValueX,newValueY))
-
-    def getValue(self):
-        "Return the current clipped value"
-        value = ['','']
-        for i in (0, 1):
-            if self.value[i] > self.maxValue[i]:
-                value[i] = self.maxValue[i]
-            elif self.value[i] < self.minValue[i]:
-                value[i] = self.minValue[i]
-            else:
-                value[i] = self.value[i]
-
-        return value
-
-    def isClipped(self):
-        "Return whether or not the current value is clipped"
-        for i in (0, 1):
-            if self.value[i] > self.maxValue[i]:
-                return True
-            elif self.value[i] < self.minValue[i]:
-                return True
-        return False
 
 class ScatterIndicator(GenericBiIndicator):
     "Scatter Graph for lack of a better name"
@@ -921,16 +817,17 @@ class DigitalIndicator(GenericIndicator):
         tPanel = pygame.transform.flip(panel,False,True)
         self.surface.blit(tPanel,self.boxPosition)
 
-class BarIndicator(GenericIndicator):
+class BarIndicator(SingleIntValue):
     "Bar numerical data"
     def __init__(self,screen, Solid=True, Sideways=False, Flip=False):
         "Ininitializes a new BarGraph"
-        GenericIndicator.__init__(self,screen)
+        SingleIntValue.__init__(self)
         self.barColour = (0,255,0)
         self.barColourClipped = (255, 0, 0)
         # self.digitalCount = 5
         self.solid = Solid
         self.sideways = Sideways
+        self.flip = Flip
 
     def _draw_background(self):
         GenericIndicator._draw_background(self)
@@ -939,7 +836,11 @@ class BarIndicator(GenericIndicator):
                          self.boxBorderColour,
                          ((0,0),self.boxSize),
                          self.boxBorderWidth)
-        self.barPadding = int( math.ceil ( self.boxSize[0] / 20 ))
+        Padding = int( math.ceil ( self.boxSize[0] / 20 )) + self.boxBorderWidth
+        if self.sideways is True:
+            self.barXYPadding = ( self.boxBorderWidth, Padding )
+        else:
+            self.barXYPadding = ( Padding, self.boxBorderWidth )
 
         # Draw scale marks.
         if self.sideways is True:
@@ -983,60 +884,101 @@ class BarIndicator(GenericIndicator):
             self._render_horizontal()
         self._render_overlay()
 
-
     def _render_horizontal(self):
         panel = self.background.copy()
+        panelSize = panel.get_size()
         # Figure out bar size and off set
-        barOff = self.barPadding
+        barMin = self.barXYPadding
+        maxBarSize = ( panelSize[0] - barMin[0] * 2,
+                       panelSize[1] - barMin[1] * 2 )
 
-        maxBarSize = ( self.boxSize[0] - ( barOff + self.boxBorderWidth ),
-                        self.boxSize[1] - barOff * 2 )
-        # Scale value to final size.
-        barWidth = int ( maxBarSize[0] * ( self.getValue() / float(100) ) )
-        logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barWidth))
+        if self.solid is True:
+            # Scale value to final size.
+            barWidth = int( maxBarSize[0] * ( self.getValue() / float(100) ) )
+            logging.debug("Bar Total Value {:03}, Scaled {}".format(self.getValue(),barWidth))
+
+            # Calculate bar details Top and Left
+            barPosition = barMin
+            barSize = (barWidth, maxBarSize[1])
+        else:
+            # Line width divided by two
+            barX = int( math.ceil( maxBarSize[0] / 60 ) )
+
+            # Recalculate
+            barMin = (self.barXYPadding[0] - barX,
+                      self.barXYPadding[1] )
+            maxBarSize = ( self.boxSize[0] - barMin[0] * 2,
+                           self.boxSize[1] - barMin[1] * 2 )
+
+            # Calculate middle of bar.
+            barWidth = int( maxBarSize[0] * ( self.getValue() / float(100) ) )
+
+            # To be fair I don't understand why I only add the padding
+            # it should be BarMin[1]
+            barPosition = ( barWidth + self.barXYPadding[0], barMin[1] )
+            barSize = (barX * 2 , maxBarSize[1])
+
         # Check for clipping
         barColour = self.barColour
         if self.isClipped() is True:
             barColour = self.barColourClipped
 
-        # Calculate bar details
-        barPosition = ( self.boxBorderWidth, barOff )
-        barSize = ( barWidth, self.boxSize[1] - barOff * 2 )
-
-        if self.solid is False:
-            # Size each size of the point.
-            barX = int( math.ceil( maxBarSize[0] / 60 ) )
-            barPosition = ( barWidth - barX, barOff )
-            barSize = (  barX * 2, self.boxSize[1] - barOff * 2 )
-        # Now draw a box
+        # Draw a box
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
-        tPanel = pygame.transform.flip(panel,False,True)
-        self.surface.blit(tPanel,self.boxPosition)
+
+        if self.flip is True:
+            panel = pygame.transform.flip(panel,True,False)
+        self.surface.blit(panel,self.boxPosition)
 
     def _render_vertical(self):
         panel = self.background.copy()
-
+        panelSize = panel.get_size()
         # Figure out bar size and off set
-        barOff = self.barPadding
-        maxBarSize = ( self.boxSize[0] - barOff * 2, self.boxSize[1] - ( barOff + self.boxBorderWidth ) )
-        # Scale value to final size.
-        barHeight = int ( maxBarSize[1] * ( self.getValue() / float(100) ) )
-        logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barHeight))
+        barMin = self.barXYPadding
+        maxBarSize = ( panelSize[0] - barMin[0] * 2,
+                       panelSize[1] - barMin[1] * 2 )
+
+        if self.solid is True:
+            # Scale value to final size.
+            barHeight = int( maxBarSize[1] * ( self.getValue() / float(100) ) )
+            logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barHeight))
+
+            # Calculate bar details Top and Left
+            barPosition = barMin
+            barSize = (maxBarSize[0] , barHeight)
+        else:
+            # Line width divided by two
+            barY = int( math.ceil( maxBarSize[1] / 60 ) )
+
+            # Recalculate
+            barMin = (self.barXYPadding[0],
+                      self.barXYPadding[1] + barY )
+            maxBarSize = ( self.boxSize[0] - barMin[0] * 2,
+                           self.boxSize[1] - barMin[1] * 2 )
+
+            # Calculate middle of bar.
+            barHeight = int( maxBarSize[1] * ( self.getValue() / float(100) ) )
+
+            # To be fair I don't understand why I only add the padding
+            # it should be BarMin[1]
+            barPosition = ( barMin[0], barHeight + self.barXYPadding[1] )
+            barSize = (  maxBarSize[0], barY * 2 )
+
+        # Check for clipping
         barColour = self.barColour
         if self.isClipped() is True:
             barColour = self.barColourClipped
-        # Calculate bar details Top and Left
-        barPosition = ( barOff, self.boxBorderWidth )
-        barSize = ( self.boxSize[0] - barOff * 2, barHeight )
-        if self.solid is False:
-            # Size each size of the point.
-            barY = int( math.ceil( maxBarSize[1] / 60 ) )
-            barPosition = ( barOff, barHeight - barY )
-            barSize = (  self.boxSize[0] - barOff * 2, barY * 2 )
+
         # Now draw a box
         pygame.draw.rect(panel, barColour, (barPosition , barSize), 0)
-        tPanel = pygame.transform.flip(panel,False,True)
-        self.surface.blit(tPanel,self.boxPosition)
+        # print "Graph  {2} Bottom/Left {0[0]}/{0[1]} Size {1[0]}/{1[1]}".format(barPosition,barSize,self.getValue())
+        # Draw the border
+        # pygame.draw.rect(panel, (0,255,255), (barMin , maxBarSize), 1)
+        # print "Border {2} Bottom/Left {0[0]}/{0[1]} Size {1[0]}/{1[1]}".format(barMin,maxBarSize,self.getValue())
+
+        if self.flip is False:
+            panel = pygame.transform.flip(panel,False,True)
+        self.surface.blit(panel,self.boxPosition)
 
     def _render_overlay(self):
         if self.render_overlay is False:
@@ -1074,6 +1016,35 @@ class BarIndicator(GenericIndicator):
 
         self.surface.blit(Label,posMe)
 
+    def setBarColour(self,Colour=None):
+        if Colour is None:
+            return self.barColour
+        else:
+            self.barColour = Colour
+
+    def setClipColour(self,Colour=None):
+        if Colour is None:
+            return self.barColourClipped
+        else:
+            self.barColourClipped = Colour
+
+    def setSolidBar(self,Solid=None):
+        if Solid is None:
+            return self.solid
+        else:
+            self.solid = Solid
+
+    def setSidewaysBar(self,Sideways=None):
+        if Sideways is None:
+            return self.sideways
+        else:
+            self.sideways = Sideways
+
+    def setFlippedBar(self,Flipped=None):
+        if Flipped is None:
+            return self.flip
+        else:
+            self.flip = Flipped
 
 class DialIndicator(GenericIndicator):
     "Dial Graph is a thing apparently"
@@ -1195,7 +1166,6 @@ class DialIndicator(GenericIndicator):
                              dialPicEndp2,
                              dialPicEndp1,
                              thickness)
-
 
     def _render(self):
         if not hasattr(self, 'background'):
