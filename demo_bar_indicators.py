@@ -1,17 +1,17 @@
 import os
 import math
 import time
-import console80
+import console80v2
 import random
 
 # Create an instance of the PyScope class
-scope = console80.MainScreen(hw=True)
+scope = console80v2.MainScreen(hw=True)
 Tick = 60
 panels = scope.autoLayoutPanels((2,2),label=0.1)
 scopePanels = []
 for panel in panels:
     # print panel
-    gPanel = console80.GenericPanel(scope.wScreen,panel['rect'],0.1)
+    gPanel = console80v2.GenericPanel(scope.wScreen,panel['rect'],0.1)
     gPanel.setName("Graph {}".format(panel['rpos']) )
     if panel['rpos'][0] % 2 > 0:
         if panel['rpos'][1] % 2 > 0:

@@ -1,6 +1,6 @@
 import os
-#import pygame
-#import pygame.gfxdraw
+import pygame
+import pygame.gfxdraw
 import math
 import logging
 import random
@@ -95,13 +95,18 @@ class MainScreen:
     def __del__(self):
         "Destructor to make sure pygame shuts down, etc."
 
-    def createClock(self):
+    def create_clock(self):
         return pygame.time.Clock()
 
-    def redrawScreen(self):
+    def redraw_screen(self):
         pygame.display.flip()
 
-    def autoLayoutPanels(self,panels=(4,3),label=0):
+    def get_panel_space(self,rect)
+        # TODO: Check for collisions.
+        # Generate a subsurface for this panel..
+        return screen.subsurface(rect)
+
+    def auto_layout_panels(self,panels=(4,3),label=0):
         "Figure out dimensions for how big the panels are and generates and array of panels."
         "Takes a simple tuple of columns by rows."
 
@@ -817,11 +822,11 @@ class DigitalIndicator(GenericIndicator):
         tPanel = pygame.transform.flip(panel,False,True)
         self.surface.blit(tPanel,self.boxPosition)
 
-class BarIndicator(SingleIntValue):
+class BarIndicator(GenericPanel):
     "Bar numerical data"
-    def __init__(self,screen, Solid=True, Sideways=False, Flip=False):
+    def __init__(self, screen, Solid=True, Sideways=False, Flip=False):
         "Ininitializes a new BarGraph"
-        SingleIntValue.__init__(self)
+        GenericPanel.__init__(self,screen,)
         self.barColour = (0,255,0)
         self.barColourClipped = (255, 0, 0)
         # self.digitalCount = 5
@@ -830,7 +835,7 @@ class BarIndicator(SingleIntValue):
         self.flip = Flip
 
     def _draw_background(self):
-        GenericIndicator._draw_background(self)
+        GenericPanel._draw_background(self)
         # Draw outside box.
         pygame.draw.rect(self.background,
                          self.boxBorderColour,
