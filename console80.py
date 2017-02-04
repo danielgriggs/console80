@@ -784,7 +784,6 @@ class BarIndicator(GenericIndicator):
             self._render_horizontal()
         self._render_overlay()
 
-
     def _render_horizontal(self):
         panel = self.background.copy()
         panelSize = panel.get_size()
@@ -797,14 +796,14 @@ class BarIndicator(GenericIndicator):
             # Scale value to final size.
             barWidth = int( maxBarSize[0] * ( self.getValue() / float(100) ) )
             logging.debug("Bar Total Value {:03}, Scaled {}".format(self.getValue(),barWidth))
-        
+
             # Calculate bar details Top and Left
             barPosition = barMin
             barSize = (barWidth, maxBarSize[1])
         else:
             # Line width divided by two
             barX = int( math.ceil( maxBarSize[0] / 60 ) )
-            
+
             # Recalculate
             barMin = (self.barXYPadding[0] - barX,
                       self.barXYPadding[1] )
@@ -843,14 +842,14 @@ class BarIndicator(GenericIndicator):
             # Scale value to final size.
             barHeight = int( maxBarSize[1] * ( self.getValue() / float(100) ) )
             logging.debug("Bar Total Value {:03}, Scaled {}".format(self.value,barHeight))
-        
+
             # Calculate bar details Top and Left
             barPosition = barMin
             barSize = (maxBarSize[0] , barHeight)
         else:
             # Line width divided by two
             barY = int( math.ceil( maxBarSize[1] / 60 ) )
-            
+
             # Recalculate
             barMin = (self.barXYPadding[0],
                       self.barXYPadding[1] + barY )
@@ -876,7 +875,7 @@ class BarIndicator(GenericIndicator):
         # Draw the border
         # pygame.draw.rect(panel, (0,255,255), (barMin , maxBarSize), 1)
         # print "Border {2} Bottom/Left {0[0]}/{0[1]} Size {1[0]}/{1[1]}".format(barMin,maxBarSize,self.getValue())
-        
+
         if self.flip is False:
             panel = pygame.transform.flip(panel,False,True)
         self.surface.blit(panel,self.boxPosition)

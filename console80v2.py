@@ -250,8 +250,8 @@ class GenericPanel(object):
         self.dial = DialIndicator(self.panel,offsetStyle)
         self.dial._render()
 
-    def addBar(self):
-        self.dial = BarIndicator(self.panel)
+    def addBar(self,Solid=True,Sideways=False,Flip=False):
+        self.dial = BarIndicator(self.panel,Solid,Sideways,Flip)
         self.dial._render()
 
     def addScatter(self):
