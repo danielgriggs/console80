@@ -161,7 +161,7 @@ class GenericPanel(object):
         self.boxName = "GenericPanel"
 
         # Generate a subsurface for this panel..
-        self.panel = self.screen.subsurface(rect)
+        self.panel = screen.subsurface(rect)
 
         # Generate a subsurface for the label.
         if self.boxLabelSize > 0:
